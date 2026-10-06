@@ -1,0 +1,7 @@
+*.xlsx
+*.xlsm
+*.csv
+*.pdf
+*.ofx
+.env
+.DS_Store
