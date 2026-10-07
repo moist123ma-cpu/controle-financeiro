@@ -35,14 +35,25 @@ header #st{color:#e8c9ce}header .s{color:#fff;border-color:#e8c9ce}header .p{bac
 *{-webkit-print-color-adjust:exact;print-color-adjust:exact}.clk{cursor:pointer}.clk:hover{background:#f6e4e7}
 #md{display:none;position:fixed;inset:0;background:#0007;align-items:center;justify-content:center;padding:14px;z-index:50}h3.ct{font:600 15px Fraunces,serif;margin:14px 0 4px}.pb{break-before:page}
 @media print{body{background:#fff}.card{border:0;padding:0}header,nav,#bn,.np{display:none}}
-@media(max-width:640px){body{font-size:15px}header{padding:calc(12px + env(safe-area-inset-top)) 14px 12px}h1{font-size:20px}
-nav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:#4a0f1c;padding:6px 6px calc(6px + env(safe-area-inset-bottom));justify-content:space-around;flex-wrap:nowrap;overflow-x:auto;gap:2px}
-nav button{color:#e8c9ce;border:0;padding:10px 12px;font-size:12px;white-space:nowrap;min-height:44px}nav button.on{background:#c4584f;color:#fff}
-main{padding:8px 12px 90px}input,select,textarea,button{min-height:42px;font-size:16px}.f{grid-template-columns:1fr 1fr}.kp{grid-template-columns:1fr 1fr}}
-@media print{nav{display:none}}
+html{-webkit-text-size-adjust:100%}button,input,select,summary{touch-action:manipulation}nav i{display:none;font-style:normal}
+#lg{position:fixed;inset:0;background:rgba(74,15,28,.94);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}#lg .card{width:100%;max-width:360px}#lg input{width:100%;margin:4px 0 10px}#lg label{display:block;font-size:12px;color:var(--mut)}
+@media(max-width:640px){
+body{font-size:15px;padding-bottom:calc(66px + env(safe-area-inset-bottom))}.dk{display:none}
+header{padding:calc(10px + env(safe-area-inset-top)) 14px 10px;gap:6px;flex-wrap:nowrap}h1{font-size:19px}header .np{display:flex;gap:6px}header .np button{padding:6px 10px;font-size:13px;min-height:38px}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:#4a0f1c;border-top:2px solid #c4584f;padding:4px 2px calc(4px + env(safe-area-inset-bottom));flex-wrap:nowrap;gap:0;display:flex}
+nav button{flex:1;min-width:0;border:0;border-radius:10px;background:none;color:#e8c9ce;padding:6px 2px;font-size:10.5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:50px;line-height:1.1}
+nav button i{display:block;font-size:19px}nav button.on{background:#c4584f;color:#fff}
+main{padding:6px 10px 20px}.card{padding:12px;margin:8px 0;border-radius:12px}
+input,select,textarea,button{min-height:44px;font-size:16px}input[type=checkbox]{min-height:0;width:22px;height:22px}
+.f{grid-template-columns:1fr 1fr}.kp{grid-template-columns:1fr 1fr}.kp b{font-size:17px}
+.w{margin:0 -12px;padding:0 12px;-webkit-overflow-scrolling:touch}td,th{padding:10px 8px}table{font-size:13px}
+#bn{padding:8px 14px}#md{align-items:flex-end;padding:0}#md>*{width:100%!important;max-width:none!important;max-height:92vh;overflow:auto;border-radius:16px 16px 0 0!important}
+.bar span{min-width:84px;font-size:12px}}
+@media(max-width:380px){.f{grid-template-columns:1fr}}
+@media print{nav,#lg{display:none}body{padding:0}}
 </style></head><body>
-<header><div><h1>Gastos Anuais</h1><span id="st">Nenhuma planilha aberta</span></div>
-<div class="np"><button class="s" onclick="abrir()">Abrir planilha</button> <button class="p" onclick="salvar(true)">Salvar base</button></div></header>
+<header><div><h1>Gastos Anuais</h1><span id="st">Não conectado à nuvem</span></div>
+<div class="np"><button class="p" id="cl" onclick="cloudBtn()">☁ Entrar</button> <button class="s dk" onclick="abrir()">Importar planilha</button> <button class="s dk" onclick="salvar(true)">Baixar backup</button></div></header>
 <div id="bn"></div><div id="md"></div><nav id="nav"></nav><main id="m"></main>
 <input type="file" id="fx" hidden accept=".xlsm,.xlsx"><input type="file" id="fc" hidden accept="image/*" capture="environment"><input type="file" id="fg" hidden accept="image/*"><input type="file" id="fp" hidden accept=".pdf,.ofx,.qfx,.csv,.txt,.xls,.xlsx" multiple>
 <script>
@@ -111,12 +122,13 @@ async function salvar(manual){
   }catch(e){if(e.name=='AbortError')return;S.err=/NoModification|lock|busy|use/i.test(e.name+e.message)?'Arquivo em uso — feche-o no Excel':e.message;return}
   if(manual){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([out]));a.download='GASTOS_BASE.xlsx';a.click();setSt('Base baixada — substitua o arquivo anterior.');S.dirty=false}
  }finally{sv=false;bn();if(again){again=false;salvar(false)}}}
-const auto=()=>{S.dirty=true;bn();clearTimeout(S.tm);S.tm=setTimeout(()=>salvar(false),700)};
+const auto=()=>{S.dirty=true;bn();clearTimeout(S.tm);S.tm=setTimeout(()=>salvar(false),700);cloudQ()};
 setInterval(()=>{if(S.dirty&&S.handle&&!sv)salvar(false)},30000);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&S.dirty&&S.handle){clearTimeout(S.tm);salvar(false)}});
 addEventListener('beforeunload',e=>{if(S.dirty){e.preventDefault();e.returnValue=''}});
 function bn(){const el=$('bn');if(!el)return;let h='';
- if(S.pend)h=`Base anterior encontrada: <b>${E(S.pend.name)}</b> <button class="p" onclick="reabrir(true)">Reabrir e continuar salvando automaticamente</button>`;
+ if(SS){h=S.cerr?`<span class=wn>⚠ ${E(S.cerr)}</span> <button class="p" onclick="cloudSync()">Tentar de novo</button>`:'';setSt(S.cerr?'☁ Offline · dados salvos no aparelho':(getPend()||csy)?'☁ Sincronizando…':'☁ Sincronizado'+(S.cult?' às '+S.cult:'')+' · '+SS.email)}
+ else if(S.pend)h=`Base anterior encontrada: <b>${E(S.pend.name)}</b> <button class="p" onclick="reabrir(true)">Reabrir e continuar salvando automaticamente</button>`;
  else if(!window.showSaveFilePicker)h=`Este navegador não grava direto no arquivo (backup local ativo). ${S.dirty?'<b class=wn>Há alterações não baixadas.</b> ':''}<button class="s" onclick="salvar(true)">Baixar base</button> <span class=mut>Use Chrome ou Edge para salvamento automático.</span>`;
  else if(!S.handle&&S.base.length)h=`Salvamento automático <b class=wn>desligado</b>. <button class="p" onclick="salvar(true)">Ativar (escolher onde salvar a base)</button>`;
  else if(S.handle)h=S.err?`<span class=wn>⚠ ${E(S.err)}</span> <button class="p" onclick="salvar(true)">Tentar novamente</button>`:S.dirty?'Salvando…':`<span class=ok>✓ Salvamento automático ativo</span> · ${E(S.handle.name)}${S.ult?' · último às '+S.ult:''}`;
@@ -126,7 +138,7 @@ async function reabrir(user){const h=S.pend;if(!h)return;
   const f=await h.getFile();await carregar(await f.arrayBuffer(),f.name,h);S.pend=null;
   const b=bkp();if(b&&b.dirty&&b.ts>f.lastModified+1500){S.cfg={...DEF,...b.cfg};S.base=b.base;refreshBK();setSt('Alterações locais não gravadas foram recuperadas.');auto()}
   render()}catch(e){setSt('Não foi possível reabrir a base: '+e.message);S.pend=null;bn()}}
-async function init(){refreshBK();render();if(!window.showOpenFilePicker)return;const h=await hGet();if(!h)return;S.pend=h;await reabrir(false);bn()}
+async function init(){refreshBK();render();updCl();if(SS){cloudStart();return}showLogin();if(!window.showOpenFilePicker)return;const h=await hGet();if(!h)return;S.pend=h;await reabrir(false);bn()}
 /* ===== PDF ===== */
 let BK=[];
 /* Perfis de layout por banco: gravados na base (aba CONFIG) e editáveis em Configuração */
@@ -254,7 +266,7 @@ const sum=a=>a.reduce((s,r)=>s+r.valor,0),opt=(a,v)=>a.map(x=>`<option ${x==v?'s
 const dm=()=>S.base.filter(r=>r.mes==S.mes);
 function render(){
  bn();modal();
- $('nav').innerHTML=[['dash','Dashboard'],['lanc','Lançamentos'],['con','Consulta'],['imp','Importar PDF'],['rel','Relatórios'],['cfg','Configuração']].map(([k,t])=>`<button class="${S.tab==k?'on':''}" onclick="S.tab='${k}';render()">${t}</button>`).join('');
+ $('nav').innerHTML=[['dash','📊','Início'],['lanc','➕','Lançar'],['con','🔎','Consulta'],['imp','📄','Importar'],['rel','📑','Relatório'],['cfg','⚙️','Ajustes']].map(([k,c,t])=>`<button class="${S.tab==k?'on':''}" onclick="S.tab='${k}';render();scrollTo(0,0)"><i>${c}</i>${t}</button>`).join('');
  try{$('m').innerHTML=({dash,lanc,con,imp,rel,cfg})[S.tab]()}catch(e){$('m').innerHTML='<div class=card><b>Erro ao montar a tela:</b> '+E(e.message)+'</div>'}}
 /* ===== filtros globais, gráficos, dashboard ===== */
 const dBR=x=>String(x||'').split('-').reverse().join('/'),cod=k=>{const i=L('cats').indexOf(k);return'3.'+pad(i<0?99:i+1)},sd=(k,v)=>{S.df[k]=v;render()};
@@ -434,6 +446,56 @@ async function lerImagem(f){const st=$('a_ocr');if(!f||!st)return;
   $('a_ocr').innerHTML='<b class=ok>Lido.</b> Confira data, descrição e valor antes de adicionar. A imagem foi descartada.'}
  catch(e){if($('a_ocr'))$('a_ocr').textContent='Não consegui ler: '+e.message}}
 ['fc','fg'].forEach(id=>$(id).onchange=e=>{const f=e.target.files[0];e.target.value='';lerImagem(f)});
+/* ===== nuvem (Supabase): login + sincronização ===== */
+const SB={url:'https://bdckizfniemrfpzrojwf.supabase.co',key:'sb_publishable_lFjertnUijx_5rEkyzDc7Q_ST9xJvTa'};
+let SS=(()=>{try{return JSON.parse(localStorage.getItem('gastos_sess'))}catch(e){return null}})(),snap=new Map(),cfgSnap='',csy=false,cagain=false;
+const setPend=v=>{try{v?localStorage.setItem('gastos_pend',SS?'1':'2'):localStorage.removeItem('gastos_pend')}catch(e){}},getPend=()=>{try{return localStorage.getItem('gastos_pend')}catch(e){return null}};
+async function sbAuth(p,b){const r=await fetch(SB.url+'/auth/v1/'+p,{method:'POST',headers:{apikey:SB.key,'Content-Type':'application/json'},body:JSON.stringify(b)}),j=await r.json().catch(()=>({}));
+ if(!r.ok)throw new Error(/invalid login|invalid_credentials/i.test(JSON.stringify(j))?'E-mail ou senha incorretos.':(j.error_description||j.msg||j.message||'Falha de autenticação'));return j}
+const keep=(j,email)=>{SS={a:j.access_token,r:j.refresh_token,e:Date.now()+(j.expires_in||3600)*1000,email:email||(SS&&SS.email)||(j.user&&j.user.email)||''};localStorage.setItem('gastos_sess',JSON.stringify(SS))};
+async function tok(){if(!SS)throw new Error('Sem login');
+ if(SS.e-Date.now()<60000){try{keep(await sbAuth('token?grant_type=refresh_token',{refresh_token:SS.r}))}catch(e){if(navigator.onLine&&/invalid|expired|not found|revoked|already/i.test(e.message)){SS=null;localStorage.removeItem('gastos_sess');updCl();bn();showLogin('Sessão expirada. Entre novamente.')}throw e}}return SS.a}
+async function sb(p,o={}){const t=await tok(),r=await fetch(SB.url+'/rest/v1/'+p,{...o,headers:{apikey:SB.key,Authorization:'Bearer '+t,'Content-Type':'application/json',...(o.headers||{})}}),x=await r.text();
+ if(!r.ok){let m=x;try{m=JSON.parse(x).message}catch(e){}throw new Error(m||'Erro '+r.status)}return x?JSON.parse(x):null}
+const dOk=d=>/^\d{4}-\d{2}-\d{2}$/.test(d||'')?d:null;
+const out=r=>({app_id:String(r.id),mes:r.mes||'',data:dOk(r.data),descricao:r.desc||'',valor:Math.round((+r.valor||0)*100)/100,tipo:r.tipo||null,cat:r.cat||null,pessoa:r.pessoa||'',conta:r.conta||'',parcela:String(r.parcela||''),pago:!!r.pago,prevista:!!r.prevista,origem:r.origem||'manual',chave:r.chave||null,gp:r.gp||null,extra:r.extra||{}});
+const inn=x=>({id:isFinite(+x.app_id)?+x.app_id:x.app_id,mes:x.mes,data:x.data||'',desc:x.descricao,valor:+x.valor,tipo:x.tipo,cat:x.cat,pessoa:x.pessoa,conta:x.conta,parcela:x.parcela,pago:x.pago,prevista:x.prevista,origem:x.origem,chave:x.chave,gp:x.gp||undefined,extra:x.extra||{}});
+const mapOf=rows=>new Map(rows.map(r=>[String(r.id),JSON.stringify(out(r))]));
+async function pull(){let o=0,all=[];for(;;){const b=await sb('lancamentos?select=*&order=created_at.asc,id.asc&limit=1000&offset='+o);all=all.concat(b);if(b.length<1000)break;o+=1000}
+ const c=await sb('config?select=cfg&limit=1');return{rows:all.map(inn),cfg:c&&c[0]?c[0].cfg:null}}
+const hora=()=>new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+async function cloudStart(silent){if(!SS||csy)return;csy=true;
+ try{if(!silent)bn();const{rows,cfg}=await pull(),cj=JSON.stringify(cfg||{}),m=mapOf(rows),hasCfg=cfg&&Object.keys(cfg).length>0;
+  if(silent&&m.size==snap.size&&[...m].every(([k,v])=>snap.get(k)===v)&&cj==cfgSnap){csy=false;return}
+  const pd=getPend();let loc=!!pd;
+  if(pd=='2'&&(rows.length||hasCfg)&&!confirm('Este aparelho tem alterações feitas sem login.\nOK = mesclar com a nuvem.\nCancelar = descartar e usar só a nuvem.'))loc=false;
+  if(loc){const have=new Set(S.base.map(r=>String(r.id)));rows.forEach(r=>{if(!have.has(String(r.id)))S.base.push(r)});snap=m;cfgSnap=cj;csy=false;return cloudSync()}
+  setPend(false);
+  if(rows.length||hasCfg){S.base=rows;if(hasCfg)S.cfg={...DEF,...cfg};snap=m;cfgSnap=cj;S.dirty=false;try{localStorage.setItem('gastos_bkp',JSON.stringify({cfg:S.cfg,base:S.base,ts:Date.now(),dirty:false}))}catch(e){}}
+  else{snap=new Map();cfgSnap='';if(S.base.length&&confirm(`A nuvem está vazia. Enviar os ${S.base.length} lançamentos deste aparelho?`)){csy=false;return cloudSync()}}
+  S.cerr=null;S.cult=hora()}catch(e){S.cerr=/fetch|network|load failed/i.test(e.message)?'sem conexão':e.message}
+ csy=false;render()}
+async function cloudSync(){if(!SS)return;if(csy){cagain=true;return}csy=true;const rev=S.rev||0;
+ try{const cur=mapOf(S.base),up=[],del=[];cur.forEach((v,k)=>{if(snap.get(k)!==v)up.push(JSON.parse(v))});snap.forEach((v,k)=>{if(!cur.has(k))del.push(k)});
+  if(del.length>20&&del.length>snap.size/2&&!confirm(`Isto vai remover ${del.length} lançamentos da nuvem. Continuar?\n(Cancelar = recarregar a nuvem e descartar a mudança.)`)){csy=false;setPend(false);return cloudStart()}
+  for(let i=0;i<up.length;i+=300)await sb('lancamentos?on_conflict=user_id,app_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(up.slice(i,i+300))});
+  for(let i=0;i<del.length;i+=60)await sb('lancamentos?app_id=in.('+del.slice(i,i+60).map(k=>'"'+k+'"').join(',')+')',{method:'DELETE'});
+  const cj=JSON.stringify(S.cfg||{});if(cj!==cfgSnap){await sb('config?on_conflict=user_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({cfg:S.cfg})});cfgSnap=cj}
+  up.forEach(u=>snap.set(u.app_id,cur.get(u.app_id)));del.forEach(k=>snap.delete(k));
+  S.cerr=null;S.cult=hora();if((S.rev||0)==rev){setPend(false);S.dirty=false}}
+ catch(e){S.cerr=/fetch|network|load failed/i.test(e.message)?'sem conexão — as alterações ficam salvas no aparelho':e.message}
+ csy=false;if(cagain){cagain=false;return cloudSync()}bn()}
+function cloudQ(){S.rev=(S.rev||0)+1;setPend(true);if(!SS)return;clearTimeout(S.ct);S.ct=setTimeout(cloudSync,1200);bn()}
+function showLogin(msg){let el=$('lg');if(!el){el=document.createElement('div');el.id='lg';document.body.appendChild(el)}
+ el.innerHTML=`<div class="card"><h2>Entrar</h2><p class="mut">Seus dados ficam na nuvem, protegidos por login.</p><label>E-mail<input id="lg_e" type="email" autocomplete="username" inputmode="email" autocapitalize="off"></label><label>Senha<input id="lg_p" type="password" autocomplete="current-password" onkeydown="if(event.key=='Enter')doLogin()"></label><p id="lg_m" class="wn">${msg||''}</p><button class="p" style="width:100%" onclick="doLogin()">Entrar</button><p><button class="s" style="width:100%" onclick="$('lg').style.display='none'">Continuar sem nuvem</button></p></div>`;el.style.display='flex'}
+async function doLogin(){const e=$('lg_e').value.trim(),p=$('lg_p').value,m=$('lg_m');if(!e||!p){m.textContent='Informe e-mail e senha.';return}m.textContent='Entrando…';
+ try{keep(await sbAuth('token?grant_type=password',{email:e,password:p}),e);$('lg').style.display='none';updCl();await cloudStart()}catch(x){m.textContent=/fetch|network|load failed/i.test(x.message)?'Sem conexão com a internet.':x.message}}
+function cloudOut(){if(!confirm('Sair da nuvem neste aparelho? Os dados locais continuam aqui.'))return;SS=null;snap=new Map();localStorage.removeItem('gastos_sess');updCl();setSt('Não conectado à nuvem');bn()}
+const cloudBtn=()=>SS?cloudOut():showLogin(),updCl=()=>{const b=$('cl');if(b)b.textContent=SS?'☁ Sair':'☁ Entrar'};
+const _car=carregar;carregar=async function(...a){const r=await _car(...a);cloudQ();return r};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&SS&&!getPend()&&!S.dirty&&S.ed==null&&!csy)cloudStart(true)});
+addEventListener('online',()=>{if(SS&&getPend())cloudSync()});setInterval(()=>{if(SS&&getPend()&&!csy)cloudSync()},30000);
+
 init();
 if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 </script></body></html>
