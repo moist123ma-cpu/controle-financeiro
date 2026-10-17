@@ -38,6 +38,18 @@ header #st{color:#e8c9ce}header .s{color:#fff;border-color:#e8c9ce}header .p{bac
 html{-webkit-text-size-adjust:100%}button,input,select,summary{touch-action:manipulation}nav i{display:none;font-style:normal}
 #lg{position:fixed;inset:0;background:rgba(74,15,28,.94);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}#lg .card{width:100%;max-width:360px}#lg input{width:100%;margin:4px 0 10px}#lg label{display:block;font-size:12px;color:var(--mut)}
 /* ===== tema leve ===== */
+/* ===== formulário de lançamento: grupos e colunas ===== */
+.lform .fsec h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--g);font-weight:500;margin:22px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--ln)}.lform .fsec:first-child h3{margin-top:8px}
+.fg{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px 16px;align-items:start}
+.fg>label{display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--mut);min-width:0}.fg input:not([type=checkbox]),.fg select{width:100%}.fg small{font-size:12px;line-height:1.35}
+.c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}
+.fg>.ckt{flex-direction:row;align-items:center;gap:10px;align-self:end;min-height:44px;padding:0 14px;border:1px solid var(--ln);border-radius:10px;background:#fff;color:var(--ink);font-size:14px;cursor:pointer}.fg>.ckt input{width:18px;height:18px;min-height:0;margin:0}
+.lform.rec #a_lvenc{grid-column:span 9}
+.fa{display:flex;justify-content:flex-end;margin-top:22px;padding-top:16px;border-top:1px solid var(--ln)}.fa button{min-width:240px;padding:12px 28px;font-size:15px}
+.vq{display:flex;flex-wrap:wrap;gap:6px;margin-top:0}
+@media(min-width:900px){.seg{max-width:440px}}
+@media(max-width:900px){.fg>label{grid-column:span 6}.fg>#a_lvenc,.lform.rec #a_lvenc{grid-column:1/-1}}
+@media(max-width:560px){.fg>label,.fg>.ckt{grid-column:1/-1}.fa button{width:100%;min-width:0}}
 /* ===== módulo financeiro visual + consulta fluida ===== */
 .vc{display:block;color:var(--mut);font-size:11.5px;margin-top:2px;font-weight:400}.vq{margin-top:6px}.vq .ch{padding:4px 12px;min-height:34px;font-size:13px}
 .hint{font-size:12.5px;color:var(--mut);margin:-4px 0 12px;line-height:1.4}
@@ -80,7 +92,7 @@ input,select,textarea{border:1px solid var(--ln);border-radius:10px;padding:10px
 input:focus,select:focus,textarea:focus{outline:0;border-color:var(--g);box-shadow:0 0 0 3px rgba(160,69,96,.12)}
 .f{gap:14px 12px}.f label{font-size:12.5px;gap:5px}.f>*{min-width:0}.f input,.f select{width:100%}
 td,th{padding:10px 8px}th{font-weight:500}#bn{background:#fbeff0}.clk:hover{background:#fdf3f4}
-#md{background:rgba(60,30,40,.35)}.bar i{border-radius:6px}
+#md{background:rgba(60,30,40,.35)}#md .f{align-items:start}.bar i{border-radius:6px}
 .dt{display:flex;gap:8px;align-items:stretch}.dt .dtx{flex:1;min-width:0}
 .dtp{position:relative;flex:0 0 46px;display:flex;align-items:center;justify-content:center;border:1px solid var(--ln);border-radius:10px;background:#fff;cursor:pointer;font-size:18px}
 .dtp input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;min-height:0;padding:0;border:0}.dtp input::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
@@ -425,7 +437,7 @@ function edit(id){const r=S.base.find(x=>x.id==id);if(!r)return;S.ed=r.id;modal(
 function modal(){const el=$('md'),r=S.ed!=null&&S.base.find(x=>x.id==S.ed);if(!r){el.style.display='none';el.innerHTML='';return}
  const ex=L('extras'),cats=r.tipo=='receita'?catsR():L('cats'),P=[''].concat(L('pessoas')),C=[''].concat(L('contas'));el.style.display='flex';
  el.innerHTML=`<div class="card" style="max-width:600px;width:100%;max-height:92vh;overflow:auto"><h2>Editar lançamento</h2><div class="f">
- <label>Data da compra / fato gerador${dtF('e_data',r.data)}</label><label>${r.tipo=='receita'?'Previsão de recebimento':'Vencimento'} <span class="mut">(se diferente)</span>${dtF('e_venc',r.venc||'')}</label><label>Descrição<input id="e_desc" value="${E(r.desc)}"></label><label>Valor<input id="e_valor" type="text" inputmode="decimal" value="${String(r.valor).replace('.',',')}"></label>
+ <label>Data da compra${dtF('e_data',r.data)}</label><label>${r.tipo=='receita'?'Previsão de recebimento':'Vencimento'}${dtF('e_venc',r.venc||'')}<small class="mut">vazio = igual à data</small></label><label>Descrição<input id="e_desc" value="${E(r.desc)}"></label><label>Valor<input id="e_valor" type="text" inputmode="decimal" value="${String(r.valor).replace('.',',')}"></label>
  <label style="${r.tipo=='receita'?'display:none':''}">Tipo<select id="e_tipo"><option value="variavel" ${r.tipo!='fixa'?'selected':''}>Variável</option><option value="fixa" ${r.tipo=='fixa'?'selected':''}>Fixa</option></select></label>
  <label>Categoria<select id="e_cat">${opt(cats.includes(r.cat)?cats:[...cats,r.cat],r.cat)}</select></label><label>Pessoa<select id="e_pessoa">${opt(P.includes(r.pessoa||'')?P:[...P,r.pessoa],r.pessoa)}</select></label>
  <label>Conta/Cartão<select id="e_conta">${opt(C.includes(r.conta||'')?C:[...C,r.conta],r.conta)}</select></label><label>Parcela<input id="e_parcela" value="${E(r.parcela)}"></label>
@@ -442,11 +454,31 @@ function saveEd(){const r=S.base.find(x=>x.id==S.ed),g=i=>$('e_'+i).value,v=num(
  recAplica(r);S.ed=null;auto();render()}
 function setMes(v){S.mes=v;S.sel=new Set();render()}
 function lanc(){const d=dm(),ex=L('extras'),cats=L('cats'),P=[''].concat(L('pessoas')),C=[''].concat(L('contas'));
- return`${parcelados()}<div class="card"><h2 id="a_h">${S.nat=='rec'?'Nova receita':'Novo lançamento'}</h2><p class="seg np"><button id="n_d" class="${S.nat=='rec'?'s':'p'}" onclick="natUI('desp')">Despesa</button> <button id="n_r" class="${S.nat=='rec'?'p':'s'}" onclick="natUI('rec')">Receita</button></p><p class="cap"><button class="p" onclick="$('fc').click()">📷 Fotografar nota / recibo</button> <button class="s" onclick="$('fg').click()">🖼 Escolher imagem</button></p><p id="a_ocr" class="mut">A foto é lida no seu aparelho e descartada: só o texto confirmado é salvo.</p><div id="a_cand" class="chips"></div><details id="a_dt" style="display:none"><summary class="mut">Texto lido (não é salvo)</summary><pre id="a_txt" style="white-space:pre-wrap;font-size:12px"></pre></details><div class="f lf">
- <label>Data da compra / fato gerador${dtF('a_data',dtDef())}</label><label id="a_lvenc"><span><span id="a_vlb">${S.nat=='rec'?'Previsão de recebimento':'Vencimento'}</span> <span class="mut">(se for diferente da data${S.cfg.regime=='data'?'':' · a despesa conta no mês do vencimento'})</span></span>${dtF('a_venc','')}<small id="a_vhint" class="ok"></small><span class="cap vq"><button type="button" class="s ch" onclick="vencQ('x')">Mesmo dia</button><button type="button" class="s ch" onclick="vencQ('d',15)">+15 dias</button><button type="button" class="s ch" onclick="vencQ('d',30)">+30 dias</button><button type="button" class="s ch" onclick="vencQ('m',1)">Mês seguinte</button></span></label><label>Descrição<input id="a_desc"></label><label id="a_lforma" style="${S.nat=='rec'?'display:none':''}">Forma de lançamento<select id="a_forma" onchange="formaUI()"><option value="vista">À vista / simples</option><option value="parc">Parcelado — informo o valor total</option><option value="and">Parcela em andamento — informo o valor da parcela</option></select></label><label><span id="a_lv">Valor</span><input id="a_valor" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" oninput="formaUI()"></label>
- <label id="a_ltipo" style="${S.nat=='rec'?'display:none':''}">Tipo<select id="a_tipo"><option value="variavel">Variável</option><option value="fixa">Fixa</option></select></label>
- <label>Categoria<select id="a_cat">${opt(S.nat=='rec'?catsR():cats)}</select></label><label>Pessoa<select id="a_pessoa">${opt(P)}</select></label><label>Conta/Cartão<select id="a_conta" onchange="vencAuto()">${opt(C)}</select></label><label id="a_lrep"><span><input type="checkbox" id="a_rep" onchange="repUI()"> 🔁 Repetir todo mês</span></label><label id="a_lnrep" style="display:none">Por quantos meses (contando este)<input id="a_nrep" type="number" inputmode="numeric" min="2" max="60" value="12" oninput="repPrev()"><small id="a_rpv" class="mut"></small></label><label id="a_lnp" style="display:none">Nº de parcelas<input id="a_np" type="number" inputmode="numeric" min="2" max="60" value="10" oninput="formaUI()"></label><label id="a_ld1" style="display:none">Data da 1ª parcela${dtF('a_d1','')}<span class="mut">vazio = data da compra</span></label><label id="a_lpar" style="display:none">Parcela atual/total (ex 03/10)<input id="a_parcela" placeholder="03/10"></label>
- ${ex.map((e,i)=>`<label>${E(e)}<input id="a_x${i}"></label>`).join('')}<label><span><input type="checkbox" id="a_pago"> <span id="a_lpago">${S.nat=='rec'?'Recebido':'Pago'}</span></span></label><button class="p" id="a_add" onclick="addManual()">${S.nat=='rec'?'Adicionar receita':'Adicionar'}</button></div><p id="a_prev" class="mut"></p></div>
+ return`${parcelados()}<div class="card"><h2 id="a_h">${S.nat=='rec'?'Nova receita':'Novo lançamento'}</h2><p class="seg np"><button id="n_d" class="${S.nat=='rec'?'s':'p'}" onclick="natUI('desp')">Despesa</button> <button id="n_r" class="${S.nat=='rec'?'p':'s'}" onclick="natUI('rec')">Receita</button></p><p class="cap"><button class="p" onclick="$('fc').click()">📷 Fotografar nota / recibo</button> <button class="s" onclick="$('fg').click()">🖼 Escolher imagem</button></p><p id="a_ocr" class="mut">A foto é lida no seu aparelho e descartada: só o texto confirmado é salvo.</p><div id="a_cand" class="chips"></div><details id="a_dt" style="display:none"><summary class="mut">Texto lido (não é salvo)</summary><pre id="a_txt" style="white-space:pre-wrap;font-size:12px"></pre></details><div id="lform" class="lform ${S.nat=='rec'?'rec':''}">
+ <div class="fsec"><h3>O que foi</h3><div class="fg">
+  <label class="c6">Descrição<input id="a_desc" placeholder="Ex.: Mercado, Netflix, Salário" autocomplete="off"></label>
+  <label class="c3"><span id="a_lv">Valor</span><input id="a_valor" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" oninput="formaUI()"></label>
+  <label class="c3">Categoria<select id="a_cat">${opt(S.nat=='rec'?catsR():cats)}</select></label>
+ </div></div>
+ <div class="fsec"><h3>Quando</h3><div class="fg">
+  <label class="c3" title="Dia em que a compra ou o serviço aconteceu (fato gerador)">Data da compra${dtF('a_data',dtDef())}</label>
+  <label class="c5" id="a_lvenc"><span id="a_vlb">${S.nat=='rec'?'Previsão de recebimento':'Vencimento'}</span>${dtF('a_venc','')}<span class="cap vq"><button type="button" class="s ch" onclick="vencQ('x')">Mesmo dia</button><button type="button" class="s ch" onclick="vencQ('d',15)">+15 dias</button><button type="button" class="s ch" onclick="vencQ('d',30)">+30 dias</button><button type="button" class="s ch" onclick="vencQ('m',1)">Mês seguinte</button></span><small id="a_vhint" class="ok"></small><small class="mut">Deixe vazio se for igual à data da compra.${S.cfg.regime=='data'?'':' A despesa conta no mês do vencimento.'}</small></label>
+  <label class="c4" id="a_lforma" style="${S.nat=='rec'?'display:none':''}">Forma de lançamento<select id="a_forma" onchange="formaUI()"><option value="vista">À vista / simples</option><option value="parc">Parcelado — informo o valor total</option><option value="and">Parcela em andamento — informo o valor da parcela</option></select></label>
+  <label class="c3" id="a_lnp" style="display:none">Nº de parcelas<input id="a_np" type="number" inputmode="numeric" min="2" max="60" value="10" oninput="formaUI()"></label>
+  <label class="c4" id="a_ld1" style="display:none">Data da 1ª parcela${dtF('a_d1','')}<span class="mut">vazio = data da compra</span></label>
+  <label class="c4" id="a_lpar" style="display:none">Parcela atual/total (ex.: 03/10)<input id="a_parcela" placeholder="03/10"></label>
+  <label class="c4 ckt" id="a_lrep"><input type="checkbox" id="a_rep" onchange="repUI()"> 🔁 Repetir todo mês</label>
+  <label class="c5" id="a_lnrep" style="display:none">Por quantos meses (contando este)<input id="a_nrep" type="number" inputmode="numeric" min="2" max="60" value="12" oninput="repPrev()"><small id="a_rpv" class="mut"></small></label>
+ </div></div>
+ <div class="fsec"><h3>Quem e onde</h3><div class="fg">
+  <label class="c3">Pessoa<select id="a_pessoa">${opt(P)}</select></label>
+  <label class="c3">Conta/Cartão<select id="a_conta" onchange="vencAuto()">${opt(C)}</select></label>
+  <label class="c3" id="a_ltipo" style="${S.nat=='rec'?'display:none':''}">Tipo<select id="a_tipo"><option value="variavel">Variável</option><option value="fixa">Fixa</option></select></label>
+  ${ex.map((e,i)=>`<label class="c3">${E(e)}<input id="a_x${i}"></label>`).join('')}
+  <label class="c3 ckt"><input type="checkbox" id="a_pago"> <span id="a_lpago">${S.nat=='rec'?'Recebido':'Pago'}</span></label>
+ </div></div>
+ <div class="fa"><button class="p" id="a_add" onclick="addManual()">${S.nat=='rec'?'Adicionar receita':'Adicionar'}</button></div>
+</div><p id="a_prev" class="mut"></p></div>
  ${resMes()}${lpTool()}<div class="card w dkv"><table><tr>${S.selOn?'<th></th>':''}<th>Data<th>Descrição<th class=n>Valor<th>Tipo<th>Categoria<th>Pessoa<th>Conta<th>Parc.${ex.map(e=>`<th>${E(e)}`).join('')}<th>Pago<th></tr>
  ${d.map(r=>`<tr class="clk${isSel(r)?' sl':''}" onclick="${selA(r)}" style="${r.prevista?'font-style:italic;color:var(--mut)':''}">${selC(r)}<td>${E(r.data)}${dv(r)}<td>${dsc(r)}<td class=n>${rv(r)}<td>${r.tipo}<td>${E(r.cat)}<td>${E(r.pessoa)}<td>${E(r.conta)}<td>${pf(r)}${ex.map(e=>`<td>${E((r.extra||{})[e])}`).join('')}<td><input type=checkbox ${r.pago?'checked':''} onclick="event.stopPropagation()" onchange="tg('${r.id}')"><td><button class=s onclick="event.stopPropagation();del('${r.id}')">✕</button>`).join('')}</table></div><div class="mbv">${d.map(r=>`<div class="li${r.prevista?' pv':''}${isSel(r)?' sl':''}" onclick="${selA(r)}"><div class=l1>${selB(r)}<b>${dsc(r)}</b><span class=v>${rv(r)}</span></div><div class=l2>${[dBR(r.data)+dvt(r),E(r.cat),E(r.pessoa),E(r.conta),pf(r),...ex.map(e=>E((r.extra||{})[e]))].filter(Boolean).join(' · ')}</div><div class=l3><label onclick="event.stopPropagation()"><input type=checkbox ${r.pago?'checked':''} onchange="tg('${r.id}')"> ${r.tipo=='receita'?'Recebido':'Pago'}</label><button class=s onclick="event.stopPropagation();del('${r.id}')">Excluir</button></div></div>`).join('')}</div>`}
 function divParc(total,N){const tc=Math.round(total*100),b=Math.floor(tc/N),rs=tc-b*N;return{base:b/100,primeira:(b+rs)/100,resto:rs}}
@@ -579,7 +611,7 @@ async function lerImagem(f){const st=$('a_ocr');if(!f||!st)return;const nat=S.na
 ['fc','fg'].forEach(id=>$(id).onchange=e=>{const f=e.target.files[0];e.target.value='';lerImagem(f)});
 /* ===== data digitável (DD/MM/AAAA) + calendário; números com vírgula ===== */
 const num=v=>{v=String(v==null?'':v).trim().replace(/[^\d,.\-]/g,'');if(v.includes(','))v=v.replace(/\./g,'').replace(',','.');return parseFloat(v)};
-const dtDef=()=>{const n=new Date(),t=n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate());return t.startsWith(S.mes)?t:S.mes+'-01'};
+const dtDef=()=>{const n=new Date(),t=n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate());return S.mes<t.slice(0,7)?S.mes+'-01':t};
 const dtF=(id,iso)=>`<span class="dt"><input id="${id}x" class="dtx" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" autocomplete="off" value="${iso?dBR(iso):''}" oninput="dtMask(this,'${id}')" onblur="dtMask(this,'${id}',1)"><span class="dtp" title="Escolher no calendário">📅<input type="date" id="${id}" value="${iso||''}" aria-label="Calendário" onchange="dtPick(this,'${id}x')"></span></span><small id="${id}m" class="wn"></small>`;
 function dtMask(el,id,fin){const d=el.value.replace(/\D/g,'').slice(0,8);el.value=d.length>4?d.slice(0,2)+'/'+d.slice(2,4)+'/'+d.slice(4):d.length>2?d.slice(0,2)+'/'+d.slice(2):d;
  let iso='',msg='';if(d.length==8){const D=+d.slice(0,2),M=+d.slice(2,4),Y=+d.slice(4),t=new Date(Y,M-1,D);if(Y>=1900&&Y<=2100&&t.getFullYear()==Y&&t.getMonth()==M-1&&t.getDate()==D)iso=Y+'-'+pad(M)+'-'+pad(D);else msg='Data inválida'}else if(fin&&d.length)msg='Use o formato DD/MM/AAAA';
@@ -594,7 +626,7 @@ function kpiRec(d){const R=ddR(),tr=sum(R),rc=sum(R.filter(r=>r.pago)),sd=tr-sum
 function resMes(){const d=dm(),R=sum(d.filter(isRec)),D=sum(d.filter(r=>!isRec(r)));return`<div class="card np" style="padding:12px 16px">Receitas <b class="ok">+${fm(R)}</b> · Despesas <b>${fm(D)}</b> · Saldo <b class="${R-D>=0?'ok':'wn'}">${fm(R-D)}</b></div>`}
 function natUI(v){S.nat=v;const r=v=='rec',sh=(i,x)=>{const e=$(i);if(e)e.style.display=x?'':'none'};
  $('n_d').className=r?'s':'p';$('n_r').className=r?'p':'s';$('a_h').textContent=r?'Nova receita':'Novo lançamento';
- {const v=$('a_vlb');if(v)v.textContent=r?'Previsão de recebimento':'Vencimento'}sh('a_lforma',!r);sh('a_ltipo',!r);$('a_lpago').textContent=r?'Recebido':'Pago';$('a_add').textContent=r?'Adicionar receita':'Adicionar';
+ {const v=$('a_vlb');if(v)v.textContent=r?'Previsão de recebimento':'Vencimento'}{const lf=$('lform');if(lf)lf.classList.toggle('rec',r)}sh('a_lforma',!r);sh('a_ltipo',!r);$('a_lpago').textContent=r?'Recebido':'Pago';$('a_add').textContent=r?'Adicionar receita':'Adicionar';
  const c=$('a_cat');c.innerHTML=opt(r?catsR():L('cats'));if(r)$('a_forma').value='vista';formaUI();vencAuto()}
 
 /* ===== exclusão em lote e limpeza de importados ===== */
