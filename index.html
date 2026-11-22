@@ -39,6 +39,8 @@ html{-webkit-text-size-adjust:100%}button,input,select,summary{touch-action:mani
 #lg{position:fixed;inset:0;background:rgba(74,15,28,.94);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}#lg .card{width:100%;max-width:360px}#lg input{width:100%;margin:4px 0 10px}#lg label{display:block;font-size:12px;color:var(--mut)}
 /* ===== tema leve ===== */
 /* ===== metas ===== */
+.ns{display:none}.ver{font:400 11px 'IBM Plex Sans',sans-serif;color:var(--mut);margin-left:6px;vertical-align:middle}
+@media(max-width:640px){.nl{display:none}.ns{display:inline}.ver{display:none}}
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px;margin:14px 0}
 .mcard{background:#fff;border:1px solid var(--ln);border-radius:var(--r);padding:16px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:10px}.mcard.ok{border-color:#9fd3c5;background:#fbfefd}
 .mhead{display:flex;align-items:center;gap:12px}.micon{font-size:26px;width:48px;height:48px;border-radius:14px;background:#fbeff0;display:flex;align-items:center;justify-content:center;flex:0 0 auto}.mhead h3{margin:0;font-size:16px;font-weight:500}
@@ -128,10 +130,25 @@ input,select,textarea,button{min-height:44px;font-size:16px}input[type=checkbox]
 @media(max-width:560px){.lf,#md .f{grid-template-columns:1fr}.lf button.p{width:100%}}
 @media(max-width:380px){.f{grid-template-columns:1fr}}
 @media print{nav,#lg{display:none}body{padding:0}}
+
+@media screen {
+  body {background:#f8f5f6}
+  header {border-bottom:1px solid var(--ln)}
+  #m > .dashboard-heading {display:flex;align-items:center;justify-content:space-between;gap:14px;margin:14px 0}
+  .dashboard-heading h2 {font-size:clamp(24px,4vw,34px);margin:0}
+  .dashboard-heading p {margin:4px 0 0}
+  .dashboard-heading button {min-height:44px}
+  #m .dashboard-section {padding:0;background:#fff;overflow:hidden}
+  .dashboard-section > summary {cursor:pointer;font-weight:650;padding:14px 16px;min-height:44px}
+  .dashboard-section[open] > summary {border-bottom:1px solid var(--ln)}
+  .dashboard-content {padding:8px 14px 14px;min-width:0}
+  .dashboard-chart-options {display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin:14px 0}
+  :where(button,summary,input,select,textarea):focus-visible {outline:2px solid #9a405b;outline-offset:2px}
+}
 </style></head><body>
-<header><div><h1>Gastos Anuais</h1><span id="st">Não conectado à nuvem</span></div>
-<div class="np"><button class="p" id="cl" onclick="cloudBtn()">☁ Entrar</button> <button class="s dk" onclick="abrir()">Importar planilha</button> <button class="s dk" onclick="salvar(true)">Baixar backup</button></div></header>
-<div id="bn"></div><div id="md"></div><nav id="nav"></nav><main id="m"></main>
+<header><div><h1>Gastos Anuais <span class="ver">v15</span></h1><span id="st" role="status">Não conectado à nuvem</span></div>
+<div class="np"><button class="p" id="cl" onclick="cloudBtn()">☁ Entrar</button></div></header>
+<div id="bn"></div><div id="md"></div><nav id="nav" aria-label="Navegação principal"></nav><main id="m"></main>
 <input type="file" id="fx" hidden accept=".xlsm,.xlsx"><input type="file" id="fc" hidden accept="image/*" capture="environment"><input type="file" id="fg" hidden accept="image/*"><input type="file" id="fp" hidden accept=".pdf,.ofx,.qfx,.csv,.txt,.xls,.xlsx" multiple>
 <script>
 const $=id=>document.getElementById(id),E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -233,8 +250,9 @@ const PERFIS_DEF=[
 {n:'PicPay',det:'picpay'},{n:'BTG',det:'btg'},{n:'Sicredi',det:'sicredi'},{n:'Sicoob',det:'sicoob'},{n:'PagBank',det:'pagbank|pagseguro'},{n:'Neon',det:'\\bneon\\b'},{n:'XP',det:'\\bxp\\b'}];
 const getPerfis=()=>{try{const p=JSON.parse(S.cfg.perfis);if(Array.isArray(p)&&p.length)return p}catch(e){}return PERFIS_DEF};
 function refreshBK(){BK=getPerfis().map(p=>{let r;try{r=new RegExp(p.det,'i')}catch(e){r=/$^/}return[p.n,r]})}
-pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 async function pdfLines(buf,nome){let pdf;
+ if (!window.pdfjsLib) throw new Error('Leitor de PDF indisponível. Conecte-se à internet e recarregue a página.');
  try{pdf=await pdfjsLib.getDocument({data:buf.slice(0)}).promise}catch(e){if(e.name!='PasswordException')throw e;pdf=await pdfjsLib.getDocument({data:buf.slice(0),password:prompt('Senha do PDF '+nome+':')||''}).promise}
  const out=[];for(let p=1;p<=pdf.numPages;p++){const tc=await(await pdf.getPage(p)).getTextContent();
   const it=tc.items.filter(i=>i.str.trim()).map(i=>({s:i.str,x:i.transform[4],y:i.transform[5]})).sort((a,b)=>b.y-a.y||a.x-b.x);let cur=[],y=null;
@@ -341,10 +359,28 @@ const meses=()=>MN.map((_,i)=>S.cfg.ano+'-'+pad(i+1));
 const selMes=(id,fn)=>`<select onchange="${fn}(this.value)">${meses().map(m=>`<option value="${m}" ${m==S.mes?'selected':''}>${MN[+m.slice(5)-1]}/${m.slice(0,4)}</option>`).join('')}</select>`;
 const sum=a=>a.reduce((s,r)=>s+r.valor,0),opt=(a,v)=>a.map(x=>`<option ${x==v?'selected':''}>${E(x)}</option>`).join('');
 const dm=()=>S.base.filter(r=>r.mes==S.mes);
+const dashboardOpen = new Set();
+function importScreen() {
+ return '<div class="card np"><h2>Arquivos da base</h2><div class="tb"><button class="s" onclick="abrir()">Importar base Excel</button> <button class="s" onclick="salvar(true)">Baixar backup</button></div></div>' + imp();
+}
+function openTab(tab) {
+ S.tab=tab;
+ S.vt=false;
+ S.va=false;
+ S.selOn=false;
+ S.sel=new Set();
+ render();
+ scrollTo(0,0);
+}
 function render(){
+ for (const section of document.querySelectorAll('[data-dashboard-section]')) {
+  const key = section.dataset.dashboardSection;
+  if (section.open) dashboardOpen.add(key);
+  else dashboardOpen.delete(key);
+ }
  bn();modal();
- $('nav').innerHTML=[['dash','📊','Início'],['lanc','➕','Lançar'],['con','🔎','Consulta'],['imp','📄','Importar'],['rel','📑','Relatório'],['metas','🎯','Metas'],['cfg','⚙️','Ajustes']].map(([k,c,t])=>`<button class="${S.tab==k?'on':''}" onclick="S.tab='${k}';S.vt=false;S.va=false;S.selOn=false;S.sel=new Set();render();scrollTo(0,0)"><i>${c}</i>${t}</button>`).join('');
- try{$('m').innerHTML=({dash,lanc,con,imp,rel,metas,cfg})[S.tab]()}catch(e){$('m').innerHTML='<div class=card><b>Erro ao montar a tela:</b> '+E(e.message)+'</div>'}}
+ $('nav').innerHTML=[['dash','📊','Início'],['lanc','➕','Lançar'],['con','🔎','Movimentações'],['imp','📄','Importar'],['rel','📑','Relatórios'],['metas','🎯','Metas'],['cfg','⚙️','Ajustes']].map(([k,c,t,t2])=>`<button class="${S.tab==k?'on':''}" ${S.tab==k?'aria-current="page"':''} onclick="openTab('${k}')"><i>${c}</i>${t2?`<span class="nl">${t}</span><span class="ns">${t2}</span>`:t}</button>`).join('');
+ try{$('m').innerHTML=({dash,lanc,con,imp:importScreen,rel,metas,cfg})[S.tab]()}catch(e){$('m').innerHTML='<div class=card><b>Erro ao montar a tela:</b> '+E(e.message)+'</div>'}}
 /* ===== filtros globais, gráficos, dashboard ===== */
 const dBR=x=>String(x||'').split('-').reverse().join('/'),cod=k=>{const i=L('cats').indexOf(k);return'3.'+pad(i<0?99:i+1)},sd=(k,v)=>{S.df[k]=v;render()};
 const COR=['#a04560','#e08a7f','#c9788b','#f0b6ae','#7d3a4d','#d4a373','#b58a96','#f2cbc4','#8c5566','#d8bcc2'];
@@ -376,11 +412,23 @@ function fbar(){const f=S.df,so=(k,a,t)=>`<label>${t}<select onchange="sd('${k}'
 function divisao(d){const P=L('pessoas'),R=rendas(),rt=Object.values(R).reduce((a,b)=>a+b,0),nm=nmes(d),dir=Object.fromEntries(P.map(p=>[p,sum(d.filter(r=>r.pessoa==p))])),livre=sum(d)-Object.values(dir).reduce((a,b)=>a+b,0);
  return`<table><tr><th>Pessoa<th class=n>Renda no período<th class=n>Atribuído direto<th class=n>Cota do restante<th class=n>Total</tr>${P.map(p=>{const sh=S.cfg.divisao=='igual'?1/P.length:(R[p]||0)/(rt||1);return`<tr><td>${E(p)}<td class=n>${fm((R[p]||0)*nm)}<td class=n>${fm(dir[p])}<td class=n>${fm(livre*sh)}<td class=n><b>${fm(dir[p]+livre*sh)}</b>`}).join('')}</table>`}
 function kpis(d){const fx=sum(d.filter(r=>r.tipo=='fixa')),vr=sum(d.filter(r=>r.tipo!='fixa')),pg=sum(d.filter(r=>r.pago));return`<div class="kp"><div><span>Despesas fixas</span><b>${fm(fx)}</b></div><div><span>Despesas variáveis</span><b>${fm(vr)}</b></div><div><span>Total</span><b>${fm(fx+vr)}</b></div><div><span>Pago</span><b class="ok">${fm(pg)}</b></div><div><span>A pagar</span><b class="wn">${fm(fx+vr-pg)}</b></div><div><span>Lançamentos</span><b>${d.length}</b></div></div>`}
-function dash(){const d=dd(),rt=Object.values(rendas()).reduce((a,b)=>a+b,0)*nmes(d);
- return vencCard()+proxFaturas()+fbar()+resumoVis(d)+kpis(d)+`<div class="kp" style="margin-top:10px"><div><span>Renda no período − despesas</span><b>${fm(rt-sum(d))}</b></div></div>${orcCard(d)}${saldoCard()}${metasMini()}
- <div class="card np"><b>Gráficos exibidos:</b> ${Object.entries(GRAF).map(([k,t])=>`<label style="margin-right:12px;white-space:nowrap"><input type="checkbox" ${S.df.graf.includes(k)?'checked':''} onchange="tgG('${k}')"> ${t}</label>`).join('')}</div>
- ${S.df.graf.map(k=>`<div class="card"><h2>${GRAF[k]}</h2>${grafico(k)}</div>`).join('')}
- <div class="card w"><h2>Divisão entre pessoas (${S.cfg.divisao})</h2>${divisao(d)}</div>`}
+function dashboardSection(key, title, content) {
+ return `<details class="card dashboard-section np" data-dashboard-section="${key}" ${dashboardOpen.has(key)?"open":""}><summary>${title}</summary><div class="dashboard-content">${content}</div></details>`;
+}
+function dash() {
+ const d = dd(), f = S.df;
+ const income = Object.values(rendas()).reduce((a, b) => a + b, 0) * nmes(d);
+ const filterCount = [f.cat, f.conta, f.pessoa, f.prev === false].filter(Boolean).length;
+ const chartOptions = Object.entries(GRAF).map(([key, title]) => `<label><input type="checkbox" ${f.graf.includes(key)?"checked":""} onchange="tgG('${key}')"> ${title}</label>`).join("");
+ const charts = f.graf.map(key => `<div class="card"><h2>${GRAF[key]}</h2>${grafico(key)}</div>`).join("");
+ return `<div class="dashboard-heading np"><div><h2>Visão geral</h2><p class="mut">${perLabel()}</p></div><button class="p" onclick="openTab('lanc')">Novo lançamento</button></div>`
+  + resumoVis(d)
+  + dashboardSection("filters", "Período e filtros" + (filterCount ? " (" + filterCount + " ativos)" : ""), fbar())
+  + dashboardSection("bills", "Vencimentos e faturas", vencCard() + proxFaturas())
+  + dashboardSection("budget", "Orçamento, saldos e metas", orcCard(d) + saldoCard() + metasMini())
+  + dashboardSection("charts", "Gráficos e detalhamento", kpis(d) + `<div class="card"><b>Renda cadastrada menos despesas</b><p>${fm(income-sum(d))}</p></div><div class="dashboard-chart-options">${chartOptions}</div>` + charts)
+  + dashboardSection("split", "Divisão entre pessoas", `<div class="w">${divisao(d)}</div>`);
+}
 const tgG=k=>{const a=S.df.graf,i=a.indexOf(k);i<0?a.push(k):a.splice(i,1);render()};
 /* ===== relatórios estilo ERP: razão, diário, balancete ===== */
 const resTab=(d,kf,t)=>{const T=sum(d)||1;return`<table><tr><th>${t}<th class=n>Qtde<th class=n>Total<th class=n>%</tr>${grp(d,kf).map(([k,v])=>`<tr><td>${E(k)}<td class=n>${d.filter(r=>kf(r)==k).length}<td class=n>${fm(v)}<td class=n>${(v/T*100).toFixed(1)}%`).join('')}<tr><th>Total<th class=n>${d.length}<th class=n>${fm(sum(d))}<th></tr></table>`};
@@ -528,7 +576,7 @@ function csv(){const t='data;vencimento;descricao;valor;tipo;categoria;pessoa;co
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+t],{type:'text/csv'}));a.download='relatorio_'+perLabel().replace(/[^\w]+/g,'_')+'.csv';a.click()}
 function cfg(){const T=(k,t,h)=>`<div class="card"><h2>${t}</h2><p class="mut">${h}</p><textarea id="c_${k}">${E(S.cfg[k])}</textarea></div>`;
  return`<div class="card"><h2>Geral</h2><div class="f"><label>Ano<input id="c_ano" type="number" value="${S.cfg.ano}"></label><label>Divisão do restante<select id="c_divisao"><option ${S.cfg.divisao=='proporcional'?'selected':''}>proporcional</option><option ${S.cfg.divisao=='igual'?'selected':''}>igual</option></select></label><label>Tolerância de conciliação (R$)<input id="c_tol" type="number" step="0.01" value="${S.cfg.tol}"></label></div></div>
- <div class="card"><h2>📅 Regime de competência</h2><p class="hint">Define em qual mês cada lançamento é contado no Início, no orçamento, na DRE e nos relatórios.</p><select onchange="setRegime(this.value)"><option value="venc" ${S.cfg.regime!='data'?'selected':''}>Pelo vencimento (a compra de hoje com fatura em novembro conta em novembro)</option><option value="data" ${S.cfg.regime=='data'?'selected':''}>Pela data da compra (fato gerador)</option></select><p class="mut">Só muda os lançamentos que têm vencimento informado. Dá para trocar quando quiser, sem perder nada.</p></div>${T('cats','Categorias de despesas','Uma por linha.')}${T('catsRec','Categorias de receitas','Uma por linha (ex.: Salário, Freelance).')}${T('orcamento','Orçamento mensal por categoria','Uma por linha, no formato Categoria=valor. Ex.: Alimentação=1500. Aparece no Início como meta × realizado.')}${T('saldos','Saldos iniciais das contas','Uma por linha, no formato Conta=valor. Ex.: Nubank=2300. Usado no Saldo por conta.')}${T('cartoes','💳 Cartões de crédito (vencimento da fatura)','Uma por linha: Conta=dia do vencimento (ex.: Nubank=10) ou Conta=vencimento/fechamento (ex.: Itaú=15/8). O nome deve ser igual ao da lista de contas. Sem o fechamento, o app estima 7 dias antes do vencimento.')}<div class="card"><button class="s" onclick="saveCfg();cartaoAplicaTodos()">Aplicar vencimento dos cartões aos lançamentos já feitos</button><p class="mut">Preenche o vencimento só dos lançamentos que ainda não têm um e que são de cartões cadastrados acima.</p></div>${T('pessoas','Pessoas','Uma por linha (dividem despesas).')}${T('rendas','Rendas','Formato Nome=valor, usadas na divisão proporcional.')}${T('contas','Contas e cartões','Aparecem no lançamento manual e na conciliação.')}
+ <div class="card"><h2>🔄 Versão do app</h2><p class="mut">Você está usando a versão <b>v15</b> (inclui o <b>Planejamento</b> de metas). Se alguma novidade não aparecer depois de enviar os arquivos ao GitHub, toque no botão abaixo para limpar a cópia antiga e recarregar.</p><button class="s" onclick="atualizarApp()">🔄 Atualizar o app agora</button></div><div class="card"><h2>📅 Regime de competência</h2><p class="hint">Define em qual mês cada lançamento é contado no Início, no orçamento, na DRE e nos relatórios.</p><select onchange="setRegime(this.value)"><option value="venc" ${S.cfg.regime!='data'?'selected':''}>Pelo vencimento (a compra de hoje com fatura em novembro conta em novembro)</option><option value="data" ${S.cfg.regime=='data'?'selected':''}>Pela data da compra (fato gerador)</option></select><p class="mut">Só muda os lançamentos que têm vencimento informado. Dá para trocar quando quiser, sem perder nada.</p></div>${T('cats','Categorias de despesas','Uma por linha.')}${T('catsRec','Categorias de receitas','Uma por linha (ex.: Salário, Freelance).')}${T('orcamento','Orçamento mensal por categoria','Uma por linha, no formato Categoria=valor. Ex.: Alimentação=1500. Aparece no Início como meta × realizado.')}${T('saldos','Saldos iniciais das contas','Uma por linha, no formato Conta=valor. Ex.: Nubank=2300. Usado no Saldo por conta.')}${T('cartoes','💳 Cartões de crédito (vencimento da fatura)','Uma por linha: Conta=dia do vencimento (ex.: Nubank=10) ou Conta=vencimento/fechamento (ex.: Itaú=15/8). O nome deve ser igual ao da lista de contas. Sem o fechamento, o app estima 7 dias antes do vencimento.')}<div class="card"><button class="s" onclick="saveCfg();cartaoAplicaTodos()">Aplicar vencimento dos cartões aos lançamentos já feitos</button><p class="mut">Preenche o vencimento só dos lançamentos que ainda não têm um e que são de cartões cadastrados acima.</p></div>${T('pessoas','Pessoas','Uma por linha (dividem despesas).')}${T('rendas','Rendas','Formato Nome=valor, usadas na divisão proporcional.')}${T('contas','Contas e cartões','Aparecem no lançamento manual e na conciliação.')}
  ${T('extras','Variáveis extras dos lançamentos manuais','Um nome de campo por linha (ex: Centro de custo, Forma de pgto). Viram colunas no lançamento.')}
  ${T('regras','Regras de categorização / conciliação','palavra=Categoria|fixa ou variavel. A 1ª regra que casar com a descrição classifica linhas importadas.')}
  ${T('titulares','Titulares (transferências próprias)','Nomes que identificam você nas descrições (um por linha). Linhas com esses nomes entram como "ignorar". No Inter o titular é detectado sozinho pelo cabeçalho.')}
@@ -750,6 +798,7 @@ function aplicaRegime(){let n=0;S.base.forEach(r=>{if(!r.venc)return;const m=mes
 function setRegime(v){S.cfg.regime=v;const n=aplicaRegime();auto();render();setSt(n?n+' lançamento(s) passaram a contar '+regimeTxt()+'.':'Regime alterado: '+regimeTxt()+'.')}
 aplicaRegime();
 
+async function atualizarApp(){try{if('serviceWorker' in navigator){const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.unregister()))}if(window.caches){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}}catch(e){}location.reload()}
 /* ===== metas financeiras: metas, aportes e receitas extras destinadas ===== */
 if(!Array.isArray(S.cfg.metas))S.cfg.metas=[];S.mNew=false;S.mEd=null;S.mxAll=false;
 const metasL=()=>{if(!Array.isArray(S.cfg.metas))S.cfg.metas=[];return S.cfg.metas},nid=()=>'m'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36),
@@ -790,11 +839,11 @@ function extrasCard(){const M=metasL().filter(m=>!mInfo(m).done),lim=addD(hj(),-
  <label class="ckl" style="margin-bottom:6px"><input type="checkbox" ${S.mxAll?'checked':''} onchange="S.mxAll=this.checked;render()"> Incluir também salário e receitas fixas</label>
  ${!M.length?'<p class="mut">Crie uma meta (ou reabra uma) para poder destinar receitas.</p>':R.length?R.map(({r,al,disp})=>`<div class="rx"><div><b>${dsc(r)}</b><small>${dBR(r.data)} · ${E(r.cat||'')} · ${r.pago?'recebida':'a receber'} · disponível <b>${fm(disp)}</b>${al>0?' (já destinado '+fm(al)+')':''}</small></div><div class="rxf"><select id="dr_m_${r.id}">${M.map(m=>`<option value="${m.id}">${E(m.ico||'🎯')} ${E(m.nome)}</option>`).join('')}</select><input id="dr_v_${r.id}" inputmode="decimal" value="${String(disp).replace('.',',')}"><button class="p" onclick="metaDestina('${r.id}')">Destinar</button></div></div>`).join(''):'<p class="mut">Nenhuma receita livre agora. Lance uma receita em <b>Lançar → Receita</b> (e já escolha a meta lá) e ela aparece aqui.</p>'}</div>`}
 function metas(){const M=metasL(),inf=M.map(m=>({m,i:mInfo(m)})).sort((a,b)=>(a.i.done-b.i.done)||((a.m.prazo||'9999')<(b.m.prazo||'9999')?-1:1)),tot=M.reduce((s,m)=>s+(+m.alvo||0),0),gu=inf.reduce((s,x)=>s+x.i.g,0),fl=inf.reduce((s,x)=>s+(x.i.done?0:x.i.falta),0),mens=inf.reduce((s,x)=>s+(x.i.mensal||0),0);
- return`<div class="card"><h2>🎯 Metas financeiras</h2><p class="hint">Defina o que quer conquistar, quanto precisa e até quando. Destine receitas extras a cada meta e acompanhe o progresso.</p>${M.length?`<div class="vt"><div class="vi"><em>🎯</em><span>Metas ativas</span><b>${inf.filter(x=>!x.i.done).length}</b><small>${inf.filter(x=>x.i.done).length} concluída(s)</small></div><div class="vi g"><em>🐷</em><span>Já guardado</span><b>${fm(gu)}</b><small>de ${fm(tot)} no total</small></div><div class="vi a"><em>⏳</em><span>Ainda falta</span><b>${fm(fl)}</b>${mens?`<small>≈ ${fm(mens)}/mês para cumprir os prazos</small>`:''}</div></div>`:''}${S.mNew||S.mEd?'':`<button class="p" onclick="S.mNew=true;S.mEd=null;render();scrollTo(0,0)">➕ Nova meta</button>`}</div>
+ return`<div class="card"><h2>🎯 Planejamento de metas</h2><p class="hint">Defina o que quer conquistar, quanto precisa e até quando. Destine receitas extras a cada meta e acompanhe o progresso.</p>${M.length?`<div class="vt"><div class="vi"><em>🎯</em><span>Metas ativas</span><b>${inf.filter(x=>!x.i.done).length}</b><small>${inf.filter(x=>x.i.done).length} concluída(s)</small></div><div class="vi g"><em>🐷</em><span>Já guardado</span><b>${fm(gu)}</b><small>de ${fm(tot)} no total</small></div><div class="vi a"><em>⏳</em><span>Ainda falta</span><b>${fm(fl)}</b>${mens?`<small>≈ ${fm(mens)}/mês para cumprir os prazos</small>`:''}</div></div>`:''}${S.mNew||S.mEd?'':`<button class="p" onclick="S.mNew=true;S.mEd=null;render();scrollTo(0,0)">➕ Nova meta</button>`}</div>
  ${S.mNew||S.mEd?metaForm():''}${M.length?`<div class="mgrid">${inf.map(mCard).join('')}</div>`:(S.mNew?'':'<div class="card"><p>Você ainda não tem metas. Comece criando a primeira: uma reserva de emergência, uma viagem, a entrada de um bem…</p></div>')}${extrasCard()}`}
-function metasMini(){const M=metasL();if(!M.length)return`<div class="card np"><h2>🎯 Metas financeiras</h2><p class="hint">Planeje o que quer conquistar e destine receitas extras para cada objetivo.</p><button class="s" onclick="S.tab='metas';S.mNew=true;render();scrollTo(0,0)">➕ Criar minha primeira meta</button></div>`;
+function metasMini(){const M=metasL();if(!M.length)return`<div class="card np"><h2>🎯 Planejamento de metas</h2><p class="hint">Planeje o que quer conquistar e destine receitas extras para cada objetivo.</p><button class="s" onclick="S.tab='metas';S.mNew=true;render();scrollTo(0,0)">➕ Criar minha primeira meta</button></div>`;
  const inf=M.map(m=>({m,i:mInfo(m)})).filter(x=>!x.i.done).sort((a,b)=>((a.m.prazo||'9999')<(b.m.prazo||'9999')?-1:1)).slice(0,3);
- return`<div class="card np"><h2>🎯 Metas financeiras</h2>${inf.length?inf.map(({m,i})=>`<div class="ob"><div class="ot"><b>${E(m.ico||'🎯')} ${E(m.nome)}</b><span>${fm(i.g)} de ${fm(m.alvo)}</span></div><div class="op"><i style="width:${i.pct}%;background:${i.st.c=='w'?'#d9534f':i.st.c=='a'?'#e0a84f':'var(--g)'}"></i></div><div class="os">${i.st.t} · ${i.pct.toFixed(0)}%${i.mensal!=null?' · guarde '+fm(i.mensal)+'/mês':''}</div></div>`).join(''):'<p class="ok">✅ Todas as metas foram atingidas!</p>'}<button class="s" onclick="S.tab='metas';render();scrollTo(0,0)">Ver todas as metas</button></div>`}
+ return`<div class="card np"><h2>🎯 Planejamento de metas</h2>${inf.length?inf.map(({m,i})=>`<div class="ob"><div class="ot"><b>${E(m.ico||'🎯')} ${E(m.nome)}</b><span>${fm(i.g)} de ${fm(m.alvo)}</span></div><div class="op"><i style="width:${i.pct}%;background:${i.st.c=='w'?'#d9534f':i.st.c=='a'?'#e0a84f':'var(--g)'}"></i></div><div class="os">${i.st.t} · ${i.pct.toFixed(0)}%${i.mensal!=null?' · guarde '+fm(i.mensal)+'/mês':''}</div></div>`).join(''):'<p class="ok">✅ Todas as metas foram atingidas!</p>'}<button class="s" onclick="S.tab='metas';render();scrollTo(0,0)">Ver todas as metas</button></div>`}
 function metasTab(){const M=metasL();if(!M.length)return'<span class="mut">Nenhuma meta cadastrada.</span>';return`<table><tr><th>Meta<th>Prazo<th class=n>Valor da meta<th class=n>Guardado<th class=n>Falta<th class=n>%<th class=n>Guardar por mês</tr>${M.map(m=>{const i=mInfo(m);return`<tr><td>${E(m.ico||'')} ${E(m.nome)}<td>${m.prazo?dBR(m.prazo):'—'}<td class=n>${fm(m.alvo)}<td class=n>${fm(i.g)}<td class=n>${fm(i.falta)}<td class=n>${i.pct.toFixed(0)}%<td class=n>${i.done?'✅':i.mensal!=null?fm(i.mensal):'—'}`}).join('')}</table>`}
 
 /* ===== cartões de crédito: vencimento da fatura automático ===== */
